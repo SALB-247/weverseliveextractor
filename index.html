@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weverse 1080p URL 추출기</title>
+<title>Weverse 최고화질 URL 추출기</title>
 <style>
   :root {
     --bg: #0f1115;
@@ -161,8 +161,8 @@
 </head>
 <body>
   <header>
-    <h1>Weverse 1080p URL 추출기</h1>
-    <div class="sub">playInfo 응답을 붙여넣으면 1080p mp4 주소를 뽑아줍니다. 네트워크 가로채기 없이, 붙여넣은 텍스트만 파싱합니다.</div>
+    <h1>Weverse 최고화질 URL 추출기</h1>
+    <div class="sub">playInfo 응답을 붙여넣으면 가장 높은 화질의 mp4 주소를 뽑아줍니다. 네트워크 가로채기 없이, 붙여넣은 텍스트만 파싱합니다.</div>
   </header>
 
   <div class="guide">
@@ -173,7 +173,7 @@
       <li>목록에서 <b>Type이 <code>xhr</code>인 행</b>을 선택 <span class="tip">(자세히는 아래 주의 참고)</span></li>
       <li>그 행을 우클릭 → <b>Copy</b> → <code>Copy response</code></li>
       <li>아래 칸에 붙여넣고 <b>URL 추출</b> 클릭</li>
-      <li>나온 카드의 <b>복사</b> 버튼으로 1080p mp4 주소 복사</li>
+      <li>나온 카드의 <b>복사</b> 버튼으로 최고 화질 mp4 주소 복사</li>
     </ol>
   </div>
 
@@ -283,21 +283,30 @@ function parseMpd(xmlText) {
       if (attr.name.endsWith("expireTime")) expire = attr.value;
     }
   }
+  // mp4 BaseURL을 가진 모든 비디오 Representation을 살펴 해상도가 가장 높은 1개를 선택.
+  // (height 우선, 동률이면 bandwidth가 큰 쪽. 해상도 없는 오디오 항목은 제외)
+  let best = null;
   for (const rep of doc.getElementsByTagName("Representation")) {
-    const h = rep.getAttribute("height");
     const mime = rep.getAttribute("mimeType") || "";
-    if (h === "1080" && mime.includes("mp4")) {
-      const b = rep.getElementsByTagName("BaseURL")[0];
-      if (b && b.textContent.includes(".mp4")) {
-        out.push({
-          url: b.textContent.trim(),
-          width: rep.getAttribute("width"),
-          height: h,
-          videoId, expire
-        });
-      }
-    }
+    if (!mime.includes("mp4")) continue;
+    const b = rep.getElementsByTagName("BaseURL")[0];
+    if (!b || !b.textContent.includes(".mp4")) continue;
+
+    const h = parseInt(rep.getAttribute("height"), 10);
+    if (!Number.isFinite(h)) continue;
+    const bw = parseInt(rep.getAttribute("bandwidth"), 10) || 0;
+
+    const cand = {
+      url: b.textContent.trim(),
+      width: rep.getAttribute("width"),
+      height: String(h),
+      bandwidth: bw,
+      videoId, expire
+    };
+    const bestH = best ? parseInt(best.height, 10) : -1;
+    if (!best || h > bestH || (h === bestH && bw > best.bandwidth)) best = cand;
   }
+  if (best) out.push(best);
   return out;
 }
 
@@ -312,7 +321,7 @@ function render(groups) {
   box.innerHTML = "";
   const flat = groups.flatMap(g => g.items.map(it => ({ ...it, src: g.key })));
   if (!flat.length) {
-    box.innerHTML = '<div class="empty">1080p mp4 URL을 찾지 못했습니다. 응답 전체를 그대로 붙여넣었는지 확인하세요.</div>';
+    box.innerHTML = '<div class="empty">mp4 URL을 찾지 못했습니다. 응답 전체를 그대로 붙여넣었는지 확인하세요.</div>';
     return;
   }
   flat.forEach(r => {
@@ -355,7 +364,7 @@ $("run").addEventListener("click", () => {
   if (!mpds.length) { $("status").textContent = "MPD를 찾지 못함. 응답 전체를 붙여넣으세요."; render([]); return; }
   const groups = mpds.map(m => ({ key: m.key, items: parseMpd(m.xml) })).filter(g => g.items.length);
   const total = groups.reduce((n, g) => n + g.items.length, 0);
-  $("status").textContent = `1080p ${total}개 발견 · 다운로더에 자동 입력됨`;
+  $("status").textContent = `최고화질 ${total}개 발견 · 다운로더에 자동 입력됨`;
   render(groups);
 });
 
