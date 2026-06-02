@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weverse 1080p URL 추출기</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #1a1d24;
+    --border: #2a2f3a;
+    --text: #e6e9ef;
+    --muted: #8b93a3;
+    --accent: #6ea8fe;
+    --accent-hover: #8bbcff;
+    --good: #5fd38b;
+    --warn: #f0b86e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    padding: 32px 20px 60px;
+    max-width: 880px;
+    margin: 0 auto;
+  }
+  header h1 { font-size: 20px; margin: 0 0 4px; }
+  header .sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+
+  .guide {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 24px;
+  }
+  .guide h2 { font-size: 14px; margin: 0 0 10px; color: var(--accent); }
+  .guide ol { margin: 0; padding-left: 20px; font-size: 13px; color: var(--text); }
+  .guide ol li { margin-bottom: 5px; }
+  .guide code { background: #0f1115; padding: 1px 6px; border-radius: 4px; font-size: 12px; color: var(--good); }
+  .guide ul { margin: 0; padding-left: 20px; font-size: 13px; color: var(--text); }
+  .guide ul li { margin-bottom: 8px; }
+  .guide .tip { color: var(--muted); font-size: 12px; }
+  .warn-box { border-color: #4a3a1f; background: #1c1812; }
+  .warn-title { color: var(--warn) !important; }
+
+  textarea {
+    width: 100%;
+    min-height: 150px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    padding: 12px;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 12px;
+    resize: vertical;
+  }
+  textarea:focus { outline: none; border-color: var(--accent); }
+
+  .row { display: flex; gap: 8px; align-items: center; margin: 12px 0; flex-wrap: wrap; }
+  button {
+    background: var(--accent);
+    color: #0f1115;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { background: var(--accent-hover); }
+  button.ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  button.ghost:hover { color: var(--text); border-color: var(--accent); }
+  .meta { font-size: 12px; color: var(--muted); }
+
+  .result { margin-top: 16px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .label { font-size: 13px; font-weight: 600; }
+  .badge { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: #243; color: var(--good); border: 1px solid #2f5; opacity: .8; }
+  .badge.alt { background: #332a1a; color: var(--warn); border-color: #654; }
+  .sub-meta { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .url {
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    word-break: break-all;
+    color: var(--accent);
+    background: #0f1115;
+    border-radius: 6px;
+    padding: 8px;
+    border: 1px solid var(--border);
+  }
+  .copy-btn { background: transparent; color: var(--good); border: 1px solid var(--border); padding: 5px 10px; font-size: 12px; }
+  .copy-btn:hover { border-color: var(--good); }
+  .empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+  .expire { color: var(--warn); font-size: 12px; margin-top: 6px; }
+  footer { margin-top: 40px; color: var(--muted); font-size: 11px; text-align: center; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Weverse 1080p URL 추출기</h1>
+    <div class="sub">playInfo 응답을 붙여넣으면 1080p mp4 주소를 뽑아줍니다. 네트워크 가로채기 없이, 붙여넣은 텍스트만 파싱합니다.</div>
+  </header>
+
+  <div class="guide">
+    <h2>쓰는 법</h2>
+    <ol>
+      <li>Weverse 영상 페이지에서 영상을 <b>재생</b></li>
+      <li><code>F12</code> → <b>Network</b> 탭 → 필터창에 <code>playInfo</code> 입력</li>
+      <li>목록에서 <b>Type이 <code>xhr</code>인 행</b>을 선택 <span class="tip">(자세히는 아래 주의 참고)</span></li>
+      <li>그 행을 우클릭 → <b>Copy</b> → <code>Copy response</code></li>
+      <li>아래 칸에 붙여넣고 <b>URL 추출</b> 클릭</li>
+      <li>나온 카드의 <b>복사</b> 버튼으로 1080p mp4 주소 복사</li>
+    </ol>
+  </div>
+
+  <div class="guide warn-box">
+    <h2 class="warn-title">⚠ 주의할 점</h2>
+    <ul>
+      <li><b>preflight 행은 고르지 마세요.</b> <code>playInfo</code>로 필터하면 같은 요청이 여러 줄 뜨는데, Type이 <code>preflight</code>인 행은 CORS 사전 요청이라 응답 본문이 비어 있습니다. 반드시 Type이 <code>xhr</code>인 행을 고르세요. (둘이 헷갈리면 둘 다 Copy response 해보고 <code>&lt;MPD</code>가 들어간 쪽을 쓰면 됩니다.)</li>
+      <li><b>영상을 재생해야 요청이 발생합니다.</b> 페이지 진입만으로는 <code>playInfo</code>가 안 잡힐 수 있으니, 잡히지 않으면 영상을 한 번 재생한 뒤 다시 확인하세요.</li>
+      <li><b>서명은 곧 만료됩니다.</b> 응답 XML 안의 <code>expireTime</code> 시각이 지나면 URL 끝 <code>_lsu_sa_</code> 서명이 무효가 되어 더 이상 동작하지 않습니다. 만료되면 페이지에서 응답을 새로 복사해 다시 붙여넣으세요. (추출 결과 카드에 만료 시각이 함께 표시됩니다.)</li>
+      <li><b>본편과 오디오 필터 버전이 둘 다 나올 수 있습니다.</b> 응답에 <code>playback</code>(본편)과 <code>enhanceModePlaybacks</code>(오디오 필터)가 모두 있으면 각각 배지로 구분해 표시됩니다. 보통 필요한 건 <b>본편</b>입니다.</li>
+    </ul>
+  </div>
+
+  <textarea id="input" placeholder="Copy response 한 내용을 여기에 붙여넣기 (JSON 또는 XML)"></textarea>
+
+  <div class="row">
+    <button id="run">URL 추출</button>
+    <button class="ghost" id="clear">지우기</button>
+    <span class="meta" id="status"></span>
+  </div>
+
+  <div class="result" id="result"></div>
+
+  <footer>모든 처리는 브라우저 안에서만 일어나며, 입력 데이터는 어디로도 전송되지 않습니다.</footer>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// 입력(문자열 또는 객체)에서 <MPD ...>를 포함한 모든 XML 문자열을 키 경로와 함께 수집
+function collectMpds(raw) {
+  const mpds = [];
+  const visit = (val, keyPath) => {
+    if (typeof val === "string") {
+      if (val.includes("<MPD")) mpds.push({ key: keyPath || "(root)", xml: val });
+    } else if (val && typeof val === "object") {
+      for (const k of Object.keys(val)) visit(val[k], keyPath ? keyPath + "." + k : k);
+    }
+  };
+  if (typeof raw === "string") {
+    let parsed = null;
+    try { parsed = JSON.parse(raw); } catch (e) { /* not JSON */ }
+    if (parsed && typeof parsed === "object") visit(parsed, "");
+    else if (raw.includes("<MPD")) mpds.push({ key: "(raw)", xml: raw });
+  } else if (raw && typeof raw === "object") {
+    visit(raw, "");
+  }
+  return mpds;
+}
+
+function parseMpd(xmlText) {
+  const out = [];
+  let doc;
+  try { doc = new DOMParser().parseFromString(xmlText, "application/xml"); }
+  catch (e) { return out; }
+  if (doc.querySelector("parsererror")) return out;
+
+  const mpdEl = doc.querySelector("MPD") || doc.documentElement;
+  let videoId = "", expire = "";
+  if (mpdEl) {
+    for (const attr of mpdEl.attributes) {
+      if (attr.name.endsWith("videoId")) videoId = attr.value;
+      if (attr.name.endsWith("expireTime")) expire = attr.value;
+    }
+  }
+  for (const rep of doc.getElementsByTagName("Representation")) {
+    const h = rep.getAttribute("height");
+    const mime = rep.getAttribute("mimeType") || "";
+    if (h === "1080" && mime.includes("mp4")) {
+      const b = rep.getElementsByTagName("BaseURL")[0];
+      if (b && b.textContent.includes(".mp4")) {
+        out.push({
+          url: b.textContent.trim(),
+          width: rep.getAttribute("width"),
+          height: h,
+          videoId, expire
+        });
+      }
+    }
+  }
+  return out;
+}
+
+function labelFor(key) {
+  if (key.includes("enhanceMode")) return { text: "오디오 필터 버전", alt: true };
+  if (key.includes("playback")) return { text: "본편", alt: false };
+  return { text: key, alt: false };
+}
+
+function render(groups) {
+  const box = $("result");
+  box.innerHTML = "";
+  const flat = groups.flatMap(g => g.items.map(it => ({ ...it, src: g.key })));
+  if (!flat.length) {
+    box.innerHTML = '<div class="empty">1080p mp4 URL을 찾지 못했습니다. 응답 전체를 그대로 붙여넣었는지 확인하세요.</div>';
+    return;
+  }
+  flat.forEach(r => {
+    const lab = labelFor(r.src);
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="card-head">
+        <span class="label">${r.width}×${r.height} <span class="badge ${lab.alt ? "alt" : ""}">${lab.text}</span></span>
+        <button class="copy-btn">복사</button>
+      </div>
+      <div class="sub-meta">videoId: ${r.videoId || "?"}</div>
+      <div class="url"></div>
+      ${r.expire ? `<div class="expire">만료: ${r.expire}</div>` : ""}
+    `;
+    card.querySelector(".url").textContent = r.url;
+    card.querySelector(".copy-btn").addEventListener("click", () => {
+      navigator.clipboard.writeText(r.url).then(() => {
+        const b = card.querySelector(".copy-btn");
+        b.textContent = "복사됨 ✓";
+        setTimeout(() => b.textContent = "복사", 1400);
+      });
+    });
+    box.appendChild(card);
+  });
+}
+
+$("run").addEventListener("click", () => {
+  const raw = $("input").value.trim();
+  if (!raw) { $("status").textContent = "입력이 비어 있습니다."; return; }
+  const mpds = collectMpds(raw);
+  if (!mpds.length) { $("status").textContent = "MPD를 찾지 못함. 응답 전체를 붙여넣으세요."; render([]); return; }
+  const groups = mpds.map(m => ({ key: m.key, items: parseMpd(m.xml) })).filter(g => g.items.length);
+  const total = groups.reduce((n, g) => n + g.items.length, 0);
+  $("status").textContent = `1080p ${total}개 발견`;
+  render(groups);
+});
+
+$("clear").addEventListener("click", () => {
+  $("input").value = "";
+  $("result").innerHTML = "";
+  $("status").textContent = "";
+});
+</script>
+</body>
+</html>
