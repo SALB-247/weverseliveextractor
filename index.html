@@ -187,15 +187,23 @@ function parseMpd(xmlText) {
     }
   }
   for (const rep of doc.getElementsByTagName("Representation")) {
-    const h = rep.getAttribute("height");
+    const w = parseInt(rep.getAttribute("width"), 10);
+    const h = parseInt(rep.getAttribute("height"), 10);
     const mime = rep.getAttribute("mimeType") || "";
-    if (h === "1080" && mime.includes("mp4")) {
+    // 짧은 쪽이 1080 → 가로(1920x1080)·세로(1080x1920) 모두 1080p로 인식
+    const shortSide = (w && h) ? Math.min(w, h) : null;
+    // 보강: resolution 라벨이 1080인지도 확인
+    let resLabel = "";
+    for (const lab of rep.getElementsByTagName("*")) {
+      if (lab.localName === "Label" && lab.getAttribute("kind") === "resolution") resLabel = lab.textContent.trim();
+    }
+    const is1080 = shortSide === 1080 || resLabel === "1080";
+    if (is1080 && mime.includes("mp4")) {
       const b = rep.getElementsByTagName("BaseURL")[0];
       if (b && b.textContent.includes(".mp4")) {
         out.push({
           url: b.textContent.trim(),
-          width: rep.getAttribute("width"),
-          height: h,
+          width: w, height: h,
           videoId, expire
         });
       }
