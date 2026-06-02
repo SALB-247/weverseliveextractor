@@ -15,6 +15,7 @@
     --accent-hover: #8bbcff;
     --good: #5fd38b;
     --warn: #f0b86e;
+    --bad: #f0676e;
   }
   * { box-sizing: border-box; }
   body {
@@ -61,6 +62,18 @@
   }
   textarea:focus { outline: none; border-color: var(--accent); }
 
+  input[type=text], input[type=number] {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 9px 11px;
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 12px;
+  }
+  input[type=text]:focus, input[type=number]:focus { outline: none; border-color: var(--accent); }
+
   .row { display: flex; gap: 8px; align-items: center; margin: 12px 0; flex-wrap: wrap; }
   button {
     background: var(--accent);
@@ -73,6 +86,7 @@
     cursor: pointer;
   }
   button:hover { background: var(--accent-hover); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
   button.ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
   button.ghost:hover { color: var(--text); border-color: var(--accent); }
   .meta { font-size: 12px; color: var(--muted); }
@@ -90,6 +104,7 @@
   .badge { font-size: 11px; padding: 2px 7px; border-radius: 999px; background: #243; color: var(--good); border: 1px solid #2f5; opacity: .8; }
   .badge.alt { background: #332a1a; color: var(--warn); border-color: #654; }
   .sub-meta { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .card-btns { display: flex; gap: 6px; }
   .url {
     font-family: ui-monospace, monospace;
     font-size: 11px;
@@ -100,11 +115,48 @@
     padding: 8px;
     border: 1px solid var(--border);
   }
-  .copy-btn { background: transparent; color: var(--good); border: 1px solid var(--border); padding: 5px 10px; font-size: 12px; }
+  .copy-btn, .send-btn { background: transparent; border: 1px solid var(--border); padding: 5px 10px; font-size: 12px; font-weight: 600; }
+  .copy-btn { color: var(--good); }
   .copy-btn:hover { border-color: var(--good); }
+  .send-btn { color: var(--accent); }
+  .send-btn:hover { border-color: var(--accent); }
   .empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
   .expire { color: var(--warn); font-size: 12px; margin-top: 6px; }
   footer { margin-top: 40px; color: var(--muted); font-size: 11px; text-align: center; }
+
+  /* ===== 다운로더 ===== */
+  .dl { margin-top: 30px; border-top: 1px solid var(--border); padding-top: 22px; }
+  .dl h2 { font-size: 14px; color: var(--accent); margin: 0 0 14px; }
+  .dl .field { margin-bottom: 12px; }
+  .dl label { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  .dl .grid3 { display: flex; gap: 10px; flex-wrap: wrap; }
+  .dl .grid3 > div { flex: 1; min-width: 130px; }
+  .dl #dlurl { min-height: 60px; }
+  .dl .toggle { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin: 6px 0; cursor: pointer; user-select: none; }
+  .dl .toggle input { width: auto; }
+  .dl .btns { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+
+  .dmeta { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: 1px; margin-top: 16px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--border); display: none; }
+  .dmeta div { background: var(--panel); padding: 12px 13px; }
+  .dmeta .k { font-size: 10px; letter-spacing: .1em; color: var(--muted); text-transform: uppercase; }
+  .dmeta .v { font-family: ui-monospace, monospace; font-size: 16px; font-weight: 700; margin-top: 5px; }
+
+  .bars { margin-top: 16px; display: none; }
+  .totalrow { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 7px; }
+  .totalrow .pct { font-family: ui-monospace, monospace; font-weight: 700; font-size: 18px; color: var(--accent); }
+  .totalrow .spd { font-family: ui-monospace, monospace; font-size: 12px; color: var(--muted); }
+  .total { height: 13px; border-radius: 7px; background: #0f1115; border: 1px solid var(--border); overflow: hidden; }
+  .total i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-hover)); transition: width .2s; }
+  .chunks { display: grid; grid-template-columns: repeat(auto-fill, minmax(32px,1fr)); gap: 5px; margin-top: 12px; }
+  .chunk { height: 6px; border-radius: 3px; background: #20242e; position: relative; overflow: hidden; }
+  .chunk i { position: absolute; inset: 0; width: 0; background: var(--accent); transition: width .15s; }
+  .chunk.done i { background: var(--good); }
+  .chunk.err i { background: var(--bad); width: 100% !important; }
+
+  .log { margin-top: 16px; font-family: ui-monospace, monospace; font-size: 12px; line-height: 1.7; color: var(--muted); max-height: 170px; overflow: auto; border-top: 1px dashed var(--border); padding-top: 10px; }
+  .log b { color: var(--text); }
+  .log .ok { color: var(--good); } .log .bad { color: var(--bad); } .log .w { color: var(--warn); }
+  .dl-note { margin-top: 16px; font-size: 12px; line-height: 1.6; color: var(--muted); border-left: 2px solid var(--border); padding-left: 12px; }
 </style>
 </head>
 <body>
@@ -145,12 +197,57 @@
 
   <div class="result" id="result"></div>
 
+  <!-- ===== 다운로더 ===== -->
+  <div class="dl">
+    <h2>병렬 청크 다운로더</h2>
+
+    <div class="field">
+      <label for="dlurl">파일 URL</label>
+      <textarea id="dlurl" spellcheck="false" placeholder="추출된 URL이 자동으로 채워집니다. 직접 붙여넣어도 됩니다."></textarea>
+    </div>
+
+    <div class="grid3">
+      <div class="field"><label for="conns">동시 연결 수</label><input id="conns" type="number" min="1" max="32" value="8"></div>
+      <div class="field"><label for="chunkmb">청크 크기 (MB)</label><input id="chunkmb" type="number" min="1" max="64" value="4"></div>
+      <div class="field"><label for="fname">저장 파일명</label><input id="fname" type="text" placeholder="자동 감지"></div>
+    </div>
+
+    <label class="toggle"><input type="checkbox" id="useproxy"> CORS 프록시 사용 (서버가 막을 때)</label>
+    <input id="proxy" type="text" value="https://corsproxy.io/?url=" style="display:none;margin-bottom:6px">
+
+    <div class="btns">
+      <button class="ghost" id="analyze">① 파일 분석</button>
+      <button id="start" disabled>② 다운로드 시작</button>
+      <button class="ghost" id="stop" disabled>중지</button>
+    </div>
+
+    <div class="dmeta" id="dmeta">
+      <div><div class="k">크기</div><div class="v" id="msize">–</div></div>
+      <div><div class="k">Range 지원</div><div class="v" id="mrange">–</div></div>
+      <div><div class="k">청크 수</div><div class="v" id="mchunks">–</div></div>
+      <div><div class="k">타입</div><div class="v" id="mtype">–</div></div>
+    </div>
+
+    <div class="bars" id="bars">
+      <div class="totalrow">
+        <span class="pct" id="pct">0%</span>
+        <span class="spd" id="spd">– MB/s · 받음 0 B</span>
+      </div>
+      <div class="total"><i id="totalbar"></i></div>
+      <div class="chunks" id="chunks"></div>
+    </div>
+
+    <div class="log" id="log"></div>
+
+    <p class="dl-note">서버가 Range 요청과 CORS(<code>Access-Control-Allow-Origin</code>)를 허용할 때 동작합니다. 막히면 위 "CORS 프록시"를 켜 보세요. 서명 URL은 만료 전에 받으세요.</p>
+  </div>
+
   <footer>모든 처리는 브라우저 안에서만 일어나며, 입력 데이터는 어디로도 전송되지 않습니다.</footer>
 
 <script>
 const $ = id => document.getElementById(id);
 
-// 입력(문자열 또는 객체)에서 <MPD ...>를 포함한 모든 XML 문자열을 키 경로와 함께 수집
+/* ========== 추출기 ========== */
 function collectMpds(raw) {
   const mpds = [];
   const visit = (val, keyPath) => {
@@ -187,23 +284,15 @@ function parseMpd(xmlText) {
     }
   }
   for (const rep of doc.getElementsByTagName("Representation")) {
-    const w = parseInt(rep.getAttribute("width"), 10);
-    const h = parseInt(rep.getAttribute("height"), 10);
+    const h = rep.getAttribute("height");
     const mime = rep.getAttribute("mimeType") || "";
-    // 짧은 쪽이 1080 → 가로(1920x1080)·세로(1080x1920) 모두 1080p로 인식
-    const shortSide = (w && h) ? Math.min(w, h) : null;
-    // 보강: resolution 라벨이 1080인지도 확인
-    let resLabel = "";
-    for (const lab of rep.getElementsByTagName("*")) {
-      if (lab.localName === "Label" && lab.getAttribute("kind") === "resolution") resLabel = lab.textContent.trim();
-    }
-    const is1080 = shortSide === 1080 || resLabel === "1080";
-    if (is1080 && mime.includes("mp4")) {
+    if (h === "1080" && mime.includes("mp4")) {
       const b = rep.getElementsByTagName("BaseURL")[0];
       if (b && b.textContent.includes(".mp4")) {
         out.push({
           url: b.textContent.trim(),
-          width: w, height: h,
+          width: rep.getAttribute("width"),
+          height: h,
           videoId, expire
         });
       }
@@ -233,7 +322,10 @@ function render(groups) {
     card.innerHTML = `
       <div class="card-head">
         <span class="label">${r.width}×${r.height} <span class="badge ${lab.alt ? "alt" : ""}">${lab.text}</span></span>
-        <button class="copy-btn">복사</button>
+        <div class="card-btns">
+          <button class="send-btn">↓ 다운로더로</button>
+          <button class="copy-btn">복사</button>
+        </div>
       </div>
       <div class="sub-meta">videoId: ${r.videoId || "?"}</div>
       <div class="url"></div>
@@ -247,8 +339,13 @@ function render(groups) {
         setTimeout(() => b.textContent = "복사", 1400);
       });
     });
+    card.querySelector(".send-btn").addEventListener("click", () => setDownloadTarget(r.url));
     box.appendChild(card);
   });
+
+  // 추출 즉시 본편 URL을 다운로더에 자동 입력 (본편 없으면 첫 항목)
+  const preferred = flat.find(r => !labelFor(r.src).alt) || flat[0];
+  if (preferred) setDownloadTarget(preferred.url, true);
 }
 
 $("run").addEventListener("click", () => {
@@ -258,7 +355,7 @@ $("run").addEventListener("click", () => {
   if (!mpds.length) { $("status").textContent = "MPD를 찾지 못함. 응답 전체를 붙여넣으세요."; render([]); return; }
   const groups = mpds.map(m => ({ key: m.key, items: parseMpd(m.xml) })).filter(g => g.items.length);
   const total = groups.reduce((n, g) => n + g.items.length, 0);
-  $("status").textContent = `1080p ${total}개 발견`;
+  $("status").textContent = `1080p ${total}개 발견 · 다운로더에 자동 입력됨`;
   render(groups);
 });
 
@@ -267,6 +364,212 @@ $("clear").addEventListener("click", () => {
   $("result").innerHTML = "";
   $("status").textContent = "";
 });
+
+/* ========== 다운로더 ========== */
+let aborter = null, running = false;
+let info = { size:0, ranges:false, type:'', url:'' };
+
+$("useproxy").onchange = () => { $("proxy").style.display = $("useproxy").checked ? 'block' : 'none'; };
+
+function fmtBytes(b){
+  if(!b) return '0 B';
+  const u=['B','KB','MB','GB','TB']; const i=Math.floor(Math.log(b)/Math.log(1024));
+  return (b/Math.pow(1024,i)).toFixed(i?2:0)+' '+u[i];
+}
+function dlog(msg, cls=''){
+  const t = new Date().toLocaleTimeString('ko-KR',{hour12:false});
+  $("log").insertAdjacentHTML('beforeend', `<div><b>${t}</b> <span class="${cls}">${msg}</span></div>`);
+  $("log").scrollTop = $("log").scrollHeight;
+}
+function wrapUrl(u){
+  if($("useproxy").checked){
+    const p = $("proxy").value.trim();
+    return (p.includes('?') || p.endsWith('=')) ? p+encodeURIComponent(u) : p+u;
+  }
+  return u;
+}
+function guessName(u){
+  try{ const p = new URL(u).pathname.split('/').pop(); return decodeURIComponent(p) || 'download.bin'; }
+  catch{ return 'download.bin'; }
+}
+
+// 추출기 → 다운로더로 URL 전달
+function setDownloadTarget(url, silent){
+  $("dlurl").value = url;
+  $("fname").value = guessName(url);
+  // 이전 분석 상태 초기화
+  info = { size:0, ranges:false, type:'', url };
+  $("start").disabled = true;
+  $("dmeta").style.display = 'none';
+  if(!silent){
+    document.querySelector('.dl').scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+}
+
+$("analyze").onclick = async () => {
+  const raw = $("dlurl").value.trim();
+  if(!raw){ dlog('URL을 입력하세요.', 'bad'); return; }
+  info.url = raw;
+  if(!$("fname").value) $("fname").value = guessName(raw);
+  $("log").innerHTML = '';
+  dlog('파일 정보를 확인하는 중…');
+  $("analyze").disabled = true;
+
+  try{
+    // bytes=0- 로 파일 전체를 요청한 뒤 헤더만 보고 본문은 즉시 취소.
+    // Range 지원 → 206, 미지원 → 200. 둘 다 Content-Length = 전체 크기.
+    // Content-Range/Accept-Ranges 는 CORS 로 가려질 수 있어 의존하지 않음.
+    let res = await fetch(wrapUrl(raw), { headers:{ Range:'bytes=0-' } });
+    let ranges = res.status === 206;
+    let len = 0;
+    const cl = res.headers.get('Content-Length');
+    if(cl) len = parseInt(cl, 10);
+    const cr = res.headers.get('Content-Range');
+    if(cr && cr.includes('/')){
+      const tot = parseInt(cr.split('/')[1], 10);
+      if(tot > 0) len = tot;
+    }
+    try{ await res.body.cancel(); }catch(_){}
+    info.size = len; info.ranges = ranges;
+    info.type = res.headers.get('Content-Type') || '알 수 없음';
+
+    $("dmeta").style.display = 'grid';
+    $("msize").textContent = len ? fmtBytes(len) : '알 수 없음';
+    $("mrange").textContent = ranges ? '지원 ✓' : '미지원 ✗';
+    $("mtype").textContent = (info.type.split(';')[0]) || '–';
+
+    const chunkBytes = Math.max(1, +$("chunkmb").value) * 1024*1024;
+    const n = (ranges && len) ? Math.ceil(len/chunkBytes) : 1;
+    $("mchunks").textContent = n;
+
+    if(ranges && len) dlog(`Range 지원 확인. ${fmtBytes(len)} → ${n}개 청크로 분할 가능.`, 'ok');
+    else if(len) dlog('이 서버는 Range를 지원하지 않습니다. 단일 연결로만 받습니다.', 'w');
+    else dlog('크기를 알 수 없습니다(헤더 미제공). 단일 연결만 시도합니다.', 'w');
+
+    $("start").disabled = false;
+  }catch(e){
+    dlog('분석 실패: '+e.message+' — CORS 차단일 수 있습니다. 프록시 옵션을 켜 보세요.', 'bad');
+  }finally{
+    $("analyze").disabled = false;
+  }
+};
+
+$("stop").onclick = () => { if(aborter) aborter.abort(); };
+
+$("start").onclick = async () => {
+  if(running) return;
+  running = true; aborter = new AbortController();
+  $("start").disabled = true; $("analyze").disabled = true; $("stop").disabled = false;
+  $("bars").style.display = 'block';
+  $("chunks").innerHTML = ''; $("totalbar").style.width='0'; $("pct").textContent='0%';
+
+  const url = info.url || $("dlurl").value.trim();
+  const chunkBytes = Math.max(1, +$("chunkmb").value) * 1024*1024;
+  const conns = Math.min(32, Math.max(1, +$("conns").value));
+
+  try{
+    if(info.ranges && info.size) await parallelDownload(url, info.size, chunkBytes, conns);
+    else await singleDownload(url);
+  }catch(e){
+    if(e.name === 'AbortError') dlog('사용자가 중지했습니다.', 'w');
+    else dlog('다운로드 실패: '+e.message, 'bad');
+  }finally{
+    running = false; $("start").disabled = false; $("analyze").disabled = false; $("stop").disabled = true;
+  }
+};
+
+async function parallelDownload(url, size, chunkBytes, conns){
+  const total = Math.ceil(size/chunkBytes);
+  const parts = new Array(total);
+  const bars = new Array(total);
+  let received = 0;
+  const start = performance.now();
+
+  for(let i=0;i<total;i++){
+    const d = document.createElement('div'); d.className='chunk';
+    const bar = document.createElement('i'); d.appendChild(bar);
+    $("chunks").appendChild(d); bars[i]={d,bar};
+  }
+  dlog(`${total}개 청크, 동시 ${conns}개 연결로 시작.`);
+
+  const tick = () => {
+    const pct = Math.min(100, received/size*100);
+    $("totalbar").style.width = pct+'%';
+    $("pct").textContent = pct.toFixed(1)+'%';
+    const sec = (performance.now()-start)/1000;
+    $("spd").textContent = `${fmtBytes(sec?received/sec:0)}/s · 받음 ${fmtBytes(received)} / ${fmtBytes(size)}`;
+  };
+
+  let next = 0;
+  async function worker(){
+    while(true){
+      const i = next++; if(i>=total) return;
+      const s = i*chunkBytes, e = Math.min(size-1, s+chunkBytes-1);
+      for(let attempt=1; attempt<=3; attempt++){
+        try{
+          const res = await fetch(wrapUrl(url), { headers:{ Range:`bytes=${s}-${e}` }, signal:aborter.signal });
+          if(res.status!==206 && res.status!==200) throw new Error('HTTP '+res.status);
+          const reader = res.body.getReader();
+          const buf = []; let got=0; const expect = e-s+1;
+          while(true){
+            const {done:rd, value} = await reader.read();
+            if(rd) break;
+            buf.push(value); got+=value.length; received+=value.length;
+            bars[i].bar.style.width = Math.min(100, got/expect*100)+'%';
+            tick();
+          }
+          parts[i] = await new Blob(buf).arrayBuffer();
+          bars[i].d.classList.add('done');
+          break;
+        }catch(err){
+          if(err.name==='AbortError') throw err;
+          if(attempt===3){ bars[i].d.classList.add('err'); dlog(`청크 ${i} 실패: ${err.message}`,'bad'); throw err; }
+          dlog(`청크 ${i} 재시도 ${attempt}/3 (${err.message})`,'w');
+        }
+      }
+    }
+  }
+
+  await Promise.all(Array.from({length:Math.min(conns,total)}, worker));
+  dlog('모든 청크 수신 완료. 파일 병합 중…','ok');
+  const blob = new Blob(parts, { type: info.type.split(';')[0] || 'application/octet-stream' });
+  saveBlob(blob);
+  const sec = ((performance.now()-start)/1000).toFixed(1);
+  dlog(`완료: ${fmtBytes(blob.size)} · ${sec}s · 평균 ${fmtBytes(blob.size/sec)}/s`,'ok');
+}
+
+async function singleDownload(url){
+  dlog('단일 연결로 다운로드 중…');
+  const res = await fetch(wrapUrl(url), { signal:aborter.signal });
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const len = +(res.headers.get('Content-Length')||0);
+  const reader = res.body.getReader(); const buf=[]; let got=0;
+  const start = performance.now();
+  $("chunks").innerHTML=''; const d=document.createElement('div'); d.className='chunk';
+  const bar=document.createElement('i'); d.appendChild(bar); $("chunks").appendChild(d);
+  while(true){
+    const {done, value} = await reader.read(); if(done) break;
+    buf.push(value); got+=value.length;
+    const pct = len? got/len*100 : 0;
+    $("totalbar").style.width = pct+'%'; bar.style.width = pct+'%';
+    $("pct").textContent = len? pct.toFixed(1)+'%' : fmtBytes(got);
+    const sec=(performance.now()-start)/1000;
+    $("spd").textContent = `${fmtBytes(sec?got/sec:0)}/s · 받음 ${fmtBytes(got)}`;
+  }
+  d.classList.add('done');
+  const blob = new Blob(buf);
+  saveBlob(blob);
+  dlog(`완료: ${fmtBytes(blob.size)}`,'ok');
+}
+
+function saveBlob(blob){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = $("fname").value.trim() || guessName(info.url);
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  dlog(`저장: ${a.download}`,'ok');
+}
 </script>
 </body>
 </html>
